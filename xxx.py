@@ -1,17 +1,42 @@
-x = 1
+import os
+import socketserver
+from http.server import SimpleHTTPRequestHandler
+
+PORT = int(os.getenv("PORT", 8000))
+print(PORT)
 
 
-def f1():
-    x = 2
-    print(x)
+class MyHandler(SimpleHTTPRequestHandler):
+    pass
 
-def f2():
-    x = 3
-    print(x)
 
-def f3():
-    print(x)
+if __name__ == "__main__":
+    with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
+        print("it" + " works")
+        httpd.serve_forever(poll_interval=1)
 
-f1()
-f2()
-f3()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
