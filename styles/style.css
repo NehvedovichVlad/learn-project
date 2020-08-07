@@ -97,8 +97,9 @@ p {
     background: #31344e url("img/intro-bg.jpg") center no-repeat;
     background-size: cover;
 
+
     /*background: #31344e url("img/intro-bg.jpg") center no-repeat / cover;
-    
+
     Если не работает запись выше, используйте эту:
     background: #31344e url("img/intro-bg.jpg") center no-repeat;
     background-size: cover;
@@ -156,7 +157,7 @@ p {
 }
 
 .btn--red {
-    background-color: #e84545;
+    background-color: #f13333;
 }
 
 .btn--red:hover {

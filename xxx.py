@@ -1,11 +1,14 @@
 import os
 import socketserver
 from http.server import SimpleHTTPRequestHandler
+from pathlib import Path
 
 PORT = int(os.getenv("PORT", 8000))
 print(PORT)
 
 CACHE_AGE = 60 * 60 * 24
+
+PROJECT_DIR = Path(__file__).parent.resolve()
 
 
 class MyHandler(SimpleHTTPRequestHandler):
@@ -26,26 +29,53 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         self.respond(content)
 
+    def handle_style(self):
+        css_file = PROJECT_DIR/"styles"/"style.css"
+        if not css_file.exists():
+            return self.handle_404()
+
+        with css_file.open("r") as fp:
+            css = fp.read()
+
+        self.respond(css, content_type="text/css")
+
+    def handle_image(self):
+        img_file = PROJECT_DIR / "styles" / "img" / "logo.png"
+        if not img_file.exists():
+            return self.handle_404()
+
+        with img_file.open("rb") as fp:
+            img = fp.read()
+
+        self.respond(img, content_type="image/png")
+
     def handle_404(self):
         msg = """NOT FOUND"""
 
         self.respond(msg, 404, content_type="text/plain")
 
-    def respond(self, message, code=200, content_type = "text/html"):
+    def respond(self, message, code=200, content_type="text/html"):
         self.send_response(code)
-        self.send_header("Content-type", "content_type")
+        self.send_header("Content-type", content_type)
         self.send_header("Content-length", str(len(message)))
-        self.send_header("Cache-control", f"max-age={CACHE_AGE}")
+        self.send_header("Cache-control", f"no-cache")
         self.end_headers()
-        self.wfile.write(message.encode())
+
+        if isinstance(message, str):
+            message = message.encode()
+        self.wfile.write(message)
 
     def do_GET(self):
         path = self.build_path()
 
         if path == "/":
             self.handle_root()
+        elif path == "/style/":
+            self.handle_style()
         elif path == "/hello/":
             self.handle_hello()
+        elif path == "/image/":
+            self.handle_image()
         else:
             self.handle_404()
 
