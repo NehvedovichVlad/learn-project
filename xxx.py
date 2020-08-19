@@ -2,6 +2,8 @@ import os
 import socketserver
 from http.server import SimpleHTTPRequestHandler
 from pathlib import Path
+from utils import build_path
+from chek import to_bytes
 
 PORT = int(os.getenv("PORT", 8000))
 print(PORT)
@@ -61,12 +63,11 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.send_header("Cache-control", f"no-cache")
         self.end_headers()
 
-        if isinstance(message, str):
-            message = message.encode()
+        message = to_bytes(message)
         self.wfile.write(message)
 
     def do_GET(self):
-        path = self.build_path()
+        path = build_path(self.path)
 
         if path == "/":
             self.handle_root()
@@ -79,11 +80,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         else:
             self.handle_404()
 
-    def build_path(self) -> str:
-        result = self.path
-        if result[-1] != "/":
-            result = f"{result}/"
-        return result
+
 
 if __name__ == "__main__":
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
