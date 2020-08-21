@@ -14,7 +14,7 @@ def test_build_path():
         "/xxx/",
         "/hello/",
     ]
-    for i in range(3):
+    for i in range(len(original)):
         t = original[i]
         e = expected[i]
         got = build_path(t)
@@ -23,14 +23,14 @@ def test_build_path():
 def test_to_bytes():
     original = [
         "xxx",
-        "hello",
+        b"hello",
     ]
 
     expected = [
         b"xxx",
         b"hello",
     ]
-    for i in range(2):
+    for i in range(len(original)):
         t = original[i]
         e = expected[i]
         got = to_bytes(t)

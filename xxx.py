@@ -1,7 +1,10 @@
 import os
 import socketserver
+import traceback
 from http.server import SimpleHTTPRequestHandler
 from pathlib import Path
+
+from mistakes import NotFound, MethodNotAllowed
 from utils import build_path
 from chek import to_bytes
 
@@ -11,6 +14,7 @@ print(PORT)
 CACHE_AGE = 60 * 60 * 24
 
 PROJECT_DIR = Path(__file__).parent.resolve()
+
 
 
 class MyHandler(SimpleHTTPRequestHandler):
@@ -51,36 +55,49 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         self.respond(img, content_type="image/png")
 
+    def handle_zde(self):
+        x = 1 / 0
+
     def handle_404(self):
         msg = """NOT FOUND"""
-
         self.respond(msg, 404, content_type="text/plain")
 
+    def handle_405(self):
+        self.respond("", 405, content_type="text/plain")
+
+    def handle_500(self):
+        self.respond(traceback.format_exe(), code=500, content_type="text/plain")
+
     def respond(self, message, code=200, content_type="text/html"):
+        message = to_bytes(message)
+
         self.send_response(code)
         self.send_header("Content-type", content_type)
         self.send_header("Content-length", str(len(message)))
         self.send_header("Cache-control", f"no-cache")
         self.end_headers()
-
-        message = to_bytes(message)
         self.wfile.write(message)
 
     def do_GET(self):
         path = build_path(self.path)
 
-        if path == "/":
-            self.handle_root()
-        elif path == "/style/":
-            self.handle_style()
-        elif path == "/hello/":
-            self.handle_hello()
-        elif path == "/image/":
-            self.handle_image()
-        else:
+        handlers = {
+            "/": self.handle_root,
+            "/style/": self.handle_style,
+            "/hello/": self.handle_hello,
+            "/image/": self.handle_image,
+            "/0/": self.handle_zde,
+        }
+
+        try:
+            handler = handlers[path]
+            handler()
+        except (NotFound, KeyError):
             self.handle_404()
-
-
+        except MethodNotAllowed:
+            self.handle_405()
+        except Exception:
+            self.handle_500()
 
 if __name__ == "__main__":
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
