@@ -1,26 +1,64 @@
-import os
-import socketserver
 import traceback
 from http.server import SimpleHTTPRequestHandler
-from pathlib import Path
 
 from mistakes import NotFound, MethodNotAllowed
-from utils import build_path
+from settings import CACHE_AGE
+from utils import read_static, build_path
 from chek import to_bytes
 
-PORT = int(os.getenv("PORT", 8000))
-print(PORT)
 
-CACHE_AGE = 60 * 60 * 24
+def get_path_with_file(url) -> tuple:
+    path = build_path(url)
+    parts = path.split("/")
 
-PROJECT_DIR = Path(__file__).parent.resolve()
+    try:
+        file_path = parts[2]
+    except IndexError:
+        file_path = None
+    path = build_path(parts[1])
+    path = f"/{path}" if path != "/" else path
 
+    return path, file_path
+
+
+def get_content_type_from_file(file_path: str) -> str:
+    if not file_path:
+        return "text/html"
+    ext = file_path.split(".")[1].lower()
+    content_type_by_extension = {
+        "gif": "image/gif",
+        "jpeg": "image/jpeg",
+        "jpg": "image/jpeg",
+        "png": "image/png",
+        "svg": "image/svg+xml",
+    }
+
+    content_type = content_type_by_extension[ext]
+    return content_type
 
 
 class MyHandler(SimpleHTTPRequestHandler):
-    def handle_root(self):
-        return super().do_GET()
+    def do_GET(self):
+        path, file_path = get_path_with_file(self.path)
+        content_type = get_content_type_from_file(file_path)
 
+        handlers = {
+            "/": [self.handle_static, ["index.html", "text/html"]],
+            "/style/": [self.handle_static, ["style.css", "text/css"]],
+            "/image/": [self.handle_static, [f"img/{file_path}", content_type]],
+            "/hello/": [self.handle_hello, []],
+            "/0/": [self.handle_zde, []],
+        }
+
+        try:
+            handler, args = handlers[path]
+            handler(*args)
+        except (NotFound, KeyError):
+            self.handle_404()
+        except MethodNotAllowed:
+            self.handle_405()
+        except Exception:
+            self.handle_500()
 
     def handle_hello(self):
         content = f"""
@@ -35,97 +73,29 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         self.respond(content)
 
-    def handle_style(self):
-        css_file = PROJECT_DIR/"styles"/"style.css"
-        if not css_file.exists():
-            return self.handle_404()
-
-        with css_file.open("r") as fp:
-            css = fp.read()
-
-        self.respond(css, content_type="text/css")
-
-    def handle_image(self):
-        img_file = PROJECT_DIR / "styles" / "img" / "logo.png"
-        if not img_file.exists():
-            return self.handle_404()
-
-        with img_file.open("rb") as fp:
-            img = fp.read()
-
-        self.respond(img, content_type="image/png")
-
     def handle_zde(self):
         x = 1 / 0
 
+    def handle_static(self, file_path, ct):
+        content = read_static(file_path)
+        self.respond(content, content_type=ct)
+
     def handle_404(self):
         msg = """NOT FOUND"""
-        self.respond(msg, 404, content_type="text/plain")
+        self.respond(msg, code=404, content_type="text/plain")
 
     def handle_405(self):
-        self.respond("", 405, content_type="text/plain")
+        self.respond("", code=405, content_type="text/plain")
 
     def handle_500(self):
-        self.respond(traceback.format_exe(), code=500, content_type="text/plain")
+        self.respond(traceback.format_exc(), code=500, content_type="text/plain")
 
     def respond(self, message, code=200, content_type="text/html"):
-        message = to_bytes(message)
+        payload = to_bytes(message)
 
         self.send_response(code)
         self.send_header("Content-type", content_type)
-        self.send_header("Content-length", str(len(message)))
-        self.send_header("Cache-control", f"no-cache")
+        self.send_header("Content-length", str(len(payload)))
+        self.send_header("Cache-control", f"max-age={CACHE_AGE}")
         self.end_headers()
-        self.wfile.write(message)
-
-    def do_GET(self):
-        path = build_path(self.path)
-
-        handlers = {
-            "/": self.handle_root,
-            "/style/": self.handle_style,
-            "/hello/": self.handle_hello,
-            "/image/": self.handle_image,
-            "/0/": self.handle_zde,
-        }
-
-        try:
-            handler = handlers[path]
-            handler()
-        except (NotFound, KeyError):
-            self.handle_404()
-        except MethodNotAllowed:
-            self.handle_405()
-        except Exception:
-            self.handle_500()
-
-if __name__ == "__main__":
-    with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
-        print("it works")
-        httpd.serve_forever(poll_interval=1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        self.wfile.write(payload)
