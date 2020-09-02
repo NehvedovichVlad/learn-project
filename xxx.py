@@ -1,9 +1,11 @@
 import traceback
+from datetime import datetime
 from http.server import SimpleHTTPRequestHandler
 
+from custom_types import Url
 from mistakes import NotFound, MethodNotAllowed
 from settings import CACHE_AGE
-from utils import read_static, build_path
+from utils import read_static, build_path, get_content_type, get_user_data
 from chek import to_bytes
 
 
@@ -39,19 +41,19 @@ def get_content_type_from_file(file_path: str) -> str:
 
 class MyHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
-        path, file_path = get_path_with_file(self.path)
-        content_type = get_content_type_from_file(file_path)
+        url = Url.from_path(self.path)
+        content_type = get_content_type(url.file_name)
 
-        handlers = {
+        endpoints = {
             "/": [self.handle_static, ["index.html", "text/html"]],
             "/style/": [self.handle_static, ["style.css", "text/css"]],
-            "/image/": [self.handle_static, [f"img/{file_path}", content_type]],
-            "/hello/": [self.handle_hello, []],
+            "/image/": [self.handle_static, [f"img/{url.file_name}", content_type]],
+            "/hello/": [self.handle_hello, [url]],
             "/0/": [self.handle_zde, []],
         }
 
         try:
-            handler, args = handlers[path]
+            handler, args = endpoints[url.normal]
             handler(*args)
         except (NotFound, KeyError):
             self.handle_404()
@@ -60,25 +62,42 @@ class MyHandler(SimpleHTTPRequestHandler):
         except Exception:
             self.handle_500()
 
-    def handle_hello(self):
+    def handle_hello(self, url):
+        user = get_user_data(url.query_string)
+        year = datetime.now().year - user.age
+
         content = f"""
-                <html>
-                <head><title>XXX</title></head>
-                <body>
-                <h1>Hello World</h1>
-                <p>PATH:{self.path}</p>
-                </body>
-                </html>
-                """
+           <html>
+           <head><title>My Project :: Hello</title></head>
+           <body>
+           <h1 style="background-color:powderblue;">>Hello {user.name}!</h1>
+           <h1 style="background-color:tomato;">>You was born at {year}!</h1>
+           <p>path: {self.path}</p>
+           <hr color="red" width="30000">
+
+           <form>
+               <label for="name-id">Your name:</label>
+               <input type="text" name="name" id="name-id">
+               <label for="age-id">Your age:</label>
+               <input type="text" name="age" id="age-id">
+               <button type="submit" id="greet-button-id">Greet</button>
+           </form>
+           <button onclick="document.location='default.asp'">Home Page</button>
+           <a class="btn  btn--red" href="/">Home page</a>
+
+           </body>
+           </html>
+           """
 
         self.respond(content)
 
     def handle_zde(self):
         x = 1 / 0
+        print(x)
 
-    def handle_static(self, file_path, ct):
+    def handle_static(self, file_path, content_type):
         content = read_static(file_path)
-        self.respond(content, content_type=ct)
+        self.respond(content, content_type=content_type)
 
     def handle_404(self):
         msg = """NOT FOUND"""
