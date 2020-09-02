@@ -4,7 +4,7 @@ from http.server import SimpleHTTPRequestHandler
 
 from custom_types import HttpRequest
 from mistakes import NotFound, MethodNotAllowed
-from settings import CACHE_AGE
+from settings import CACHE_AGE, STORAGE_DIR
 from utils import read_static, build_path, get_user_data
 from chek import to_bytes
 
@@ -48,6 +48,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             "/style/": [self.handle_static, ["style.css", "text/css"]],
             "/image/": [self.handle_static, [f"img/{req.file_name}", req.content_type]],
             "/hello/": [self.handle_hello, [req]],
+            "/hello-update/": [self.handle_hello_update, [req]],
             "/0/": [self.handle_zde, []],
         }
 
@@ -78,8 +79,24 @@ class MyHandler(SimpleHTTPRequestHandler):
         payload = payload_in_bytes.decode()
         return payload
 
+    def handle_hello_update(self, request: HttpRequest):
+        if request.method != "post":
+            raise MethodNotAllowed
+
+        qs = self.get_request_payload()
+        self.save_user_qs_to_file(qs)
+        self.redirect("/hello")
+
+    def redirect(self, to):
+        self.send_response(302)
+        self.send_header("Location", to)
+        self.end_headers()
+
     def handle_hello(self, request):
-        query_string = request.query_string or self.get_request_payload()
+        if request.method != "get":
+            raise MethodNotAllowed
+
+        query_string = self.get_user_qs_from_file()
         user = get_user_data(query_string)
 
         year = datetime.now().year - user.age
@@ -93,7 +110,7 @@ class MyHandler(SimpleHTTPRequestHandler):
            <p>path: {self.path}</p>
            <hr color="red" width="30000">
 
-           <form method="post">
+           <form method="post" action="/hello-update">
                <label for="name-id">Your name:</label>
                <input type="text" name="name" id="name-id">
                <label for="age-id">Your age:</label>
@@ -136,3 +153,25 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.send_header("Cache-control", f"max-age={CACHE_AGE}")
         self.end_headers()
         self.wfile.write(payload)
+
+    def get_user_qs_from_file(self):
+        qs_file = STORAGE_DIR / "xxx.txt"
+        if not qs_file.is_file():
+            return ""
+
+        with qs_file.open("r") as src:
+            content = src.read()
+
+        if isinstance(content, bytes):
+            content = content.decode()
+
+        return content
+
+
+    def save_user_qs_to_file(self, query: str):
+        qs_file = STORAGE_DIR / "xxx.txt"
+
+        with qs_file.open("w") as dst:
+            dst.write(query)
+
+
