@@ -1,0 +1,21 @@
+ <html>
+ <head><title>My Project :: Hello</title></head>
+ <body>
+           <h1 style="background-color:powderblue;">>Hello {user.name}!</h1>
+           <h1 style="background-color:tomato;">>You was born at {year}!</h1>
+           <p>path: {self.path}</p>
+           <hr color="red" width="30000">
+
+           <form method="post" action="/hello-update">
+               <label for="name-id">Your name:</label>
+               <input type="text" name="name" id="name-id" value="{user.name}">
+               <label for="age-id">Your age:</label>
+               <input type="text" name="age" id="age-id" value="{user.age}">
+               <button type="submit" id="greet-button-id">Greet</button>
+           </form>
+           <button onclick="document.location='default.asp'">Home Page</button>
+           <a class="btn  btn--red" href="/">Home page</a>
+
+ </body>
+ </html>
+

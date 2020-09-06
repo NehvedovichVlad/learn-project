@@ -14,5 +14,8 @@ def server_greet():
 
 if __name__ == "__main__":
     with socketserver.TCPServer(("", settings.PORT), MyHandler) as httpd:
-        print("it works")
-        httpd.serve_forever(poll_interval=1)
+        server_greet()
+        try:
+            httpd.serve_forever(poll_interval=0.4)
+        finally:
+            httpd.shutdown()
