@@ -6,13 +6,17 @@
            <p>path: {self.path}</p>
            <hr color="red" width="30000">
 
-           <form method="post" action="/hello-update">
-               <label for="name-id">Your name:</label>
-               <input type="text" name="name" id="name-id" value="{user.name}">
-               <label for="age-id">Your age:</label>
-               <input type="text" name="age" id="age-id" value="{user.age}">
-               <button type="submit" id="greet-button-id">Greet</button>
-           </form>
+           <form action="/hello-update" method="post">
+    <div>
+      <label class="{class_for_name}" for="name-id" style="grid-area: gi-name-label">{label_for_name}</label>
+      <input id="name-id" name="name" style="grid-area: gi-name-input" type="text" value="{name_new}">
+
+      <label class="{class_for_age}" for="age-id" style="grid-area: gi-age-label">{label_for_age}</label>
+      <input id="age-id" name="age" style="grid-area: gi-age-input" type="text" value="{age_new}">
+
+      <button id="greet-button-id" style="grid-area: gi-submit" type="submit">Greet</button>
+    </div>
+  </form>
            <button onclick="document.location='default.asp'">Home Page</button>
            <a class="btn  btn--red" href="/">Home page</a>
 

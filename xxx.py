@@ -1,43 +1,13 @@
 import traceback
-from datetime import datetime, date
+from datetime import date
 from http.server import SimpleHTTPRequestHandler
 
 from custom_types import HttpRequest, User
 from mistakes import NotFound, MethodNotAllowed
-from settings import CACHE_AGE, STORAGE_DIR
-from utils import read_static, build_path, get_user_data, to_str
+from settings import CACHE_AGE
+from utils import read_static, to_str
 from chek import to_bytes
 from const import USERS_DATA, CSS_CLASS_ERROR
-
-
-def get_path_with_file(url) -> tuple:
-    path = build_path(url)
-    parts = path.split("/")
-
-    try:
-        file_path = parts[2]
-    except IndexError:
-        file_path = None
-    path = build_path(parts[1])
-    path = f"/{path}" if path != "/" else path
-
-    return path, file_path
-
-
-def get_content_type_from_file(file_path: str) -> str:
-    if not file_path:
-        return "text/html"
-    ext = file_path.split(".")[1].lower()
-    content_type_by_extension = {
-        "gif": "image/gif",
-        "jpeg": "image/jpeg",
-        "jpg": "image/jpeg",
-        "png": "image/png",
-        "svg": "image/svg+xml",
-    }
-
-    content_type = content_type_by_extension[ext]
-    return content_type
 
 
 class MyHandler(SimpleHTTPRequestHandler):
@@ -54,9 +24,12 @@ class MyHandler(SimpleHTTPRequestHandler):
         }
 
         try:
-            handler, args = endpoints[req.normal]
+            try:
+                handler, args = endpoints[req.normal]
+            except KeyError:
+                raise NotFound
             handler(*args)
-        except (NotFound, KeyError):
+        except (NotFound,):
             self.handle_404()
         except MethodNotAllowed:
             self.handle_405()
@@ -68,17 +41,6 @@ class MyHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         self.dispatch("get")
-
-    def get_request_payload(self) -> str:
-        content_length_in_str = self.headers.get("content-length", 0)
-        content_length = int(content_length_in_str)
-
-        if not content_length:
-            return ""
-
-        payload_in_bytes = self.rfile.read(content_length)
-        payload = payload_in_bytes.decode()
-        return payload
 
     def handle_hello_update(self, request: HttpRequest):
         if request.method != "post":
@@ -99,15 +61,6 @@ class MyHandler(SimpleHTTPRequestHandler):
 
         self.respond(hello_page)
 
-    def name_valid(self,):
-        query_string = self.get_user_qs_from_file()
-        user = get_user_data(query_string)
-        if user.name.isalpha() and user.age.isdigit():
-            raise Exception
-
-
-
-
     def redirect(self, to):
         self.send_response(302)
         self.send_header("Location", to)
@@ -123,7 +76,7 @@ class MyHandler(SimpleHTTPRequestHandler):
         content = self.render_hello_page(user, user)
 
         self.respond(content)
-        
+
     def handle_zde(self):
         x = 1 / 0
         print(x)
@@ -152,19 +105,6 @@ class MyHandler(SimpleHTTPRequestHandler):
         self.send_header("Cache-control", f"max-age={CACHE_AGE}")
         self.end_headers()
         self.wfile.write(payload)
-
-    def get_user_qs_from_file(self):
-        qs_file = STORAGE_DIR / "xxx.txt"
-        if not qs_file.is_file():
-            return ""
-
-        with qs_file.open("r") as src:
-            content = src.read()
-
-        if isinstance(content, bytes):
-            content = content.decode()
-
-        return content
 
     @staticmethod
     def load_user_data() -> str:
@@ -210,6 +150,8 @@ class MyHandler(SimpleHTTPRequestHandler):
         template = read_static("hello.html").decode()
 
         context = {
+            "self": self,
+            "user": saved_user,
             "age_new": age_new or "",
             "label_for_age": label_for_age,
             "label_for_name": label_for_name,
@@ -235,4 +177,3 @@ class MyHandler(SimpleHTTPRequestHandler):
         payload = to_str(payload_as_bytes)
 
         return payload
-
