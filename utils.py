@@ -15,12 +15,6 @@ def build_path(path: str) -> str:
 
 
 def read_static(path: str) -> bytes:
-    """
-    Reads and returns the content of static file.
-    If there is no file, then NotFound exception is raised.
-    :param path: path to static content
-    :return: bytes of content
-    """
 
     static_obj = settings.STATIC_DIR / path
     if not static_obj.is_file():
