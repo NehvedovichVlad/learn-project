@@ -1,4 +1,4 @@
-HERE := $(shell сwd)
+HERE := $(shell сd)
 VENV := $(shell pipenv --venv)
 SRC := ${HERE}
 
