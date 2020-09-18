@@ -1,6 +1,7 @@
 import socketserver
+
 import settings
-from xxx import MyHandler
+from xxx import MyHttp
 
 
 def server_greet():
@@ -13,9 +14,10 @@ def server_greet():
 
 
 if __name__ == "__main__":
-    with socketserver.TCPServer(("", settings.PORT), MyHandler) as httpd:
+    with socketserver.TCPServer(("", settings.PORT), MyHttp) as httpd:
         server_greet()
         try:
             httpd.serve_forever(poll_interval=0.4)
         finally:
+            httpd.shutdown()
             httpd.shutdown()

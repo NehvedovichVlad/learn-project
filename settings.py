@@ -14,3 +14,6 @@ assert TESTS_DIR.is_dir(), f"missing directory: TESTS_DIR=`{TESTS_DIR}`"
 
 STORAGE_DIR = PROJECT_DIR / "storage"
 assert STORAGE_DIR.is_dir(), f"missing directory: STORAGE_DIR=`{STORAGE_DIR}`"
+
+SITE = os.getenv("SITE", "localhost")
+assert SITE, f"cookies won't be working with empty SITE"

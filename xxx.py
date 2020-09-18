@@ -1,18 +1,21 @@
 import traceback
 from datetime import date
 from http.server import SimpleHTTPRequestHandler
+from typing import Optional
 
-from custom_types import HttpRequest, User
-from mistakes import NotFound, MethodNotAllowed
-from settings import CACHE_AGE
-from utils import read_static, to_str
-from chek import to_bytes
-from const import USERS_DATA, CSS_CLASS_ERROR
+from jinja2 import Template
+
+import consts
+import custom_types
+import errors
+import utils
 
 
-class MyHandler(SimpleHTTPRequestHandler):
+class MyHttp(SimpleHTTPRequestHandler):
     def dispatch(self, http_method):
-        req = HttpRequest.from_path(self.path, method=http_method)
+        req = custom_types.HttpRequest.build(
+            self.path, method=http_method, headers=self.headers
+        )
 
         endpoints = {
             "/": [self.handle_static, ["index.html", "text/html"]],
@@ -21,17 +24,18 @@ class MyHandler(SimpleHTTPRequestHandler):
             "/hello/": [self.handle_hello, [req]],
             "/hello-update/": [self.handle_hello_update, [req]],
             "/0/": [self.handle_zde, []],
+            "/reset/": [self.handle_hello_reset, [req]]
         }
 
         try:
             try:
                 handler, args = endpoints[req.normal]
             except KeyError:
-                raise NotFound
+                raise errors.NotFound
             handler(*args)
-        except (NotFound,):
+        except errors.NotFound:
             self.handle_404()
-        except MethodNotAllowed:
+        except errors.MethodNotAllowed:
             self.handle_405()
         except Exception:
             self.handle_500()
@@ -42,36 +46,48 @@ class MyHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         self.dispatch("get")
 
-    def handle_hello_update(self, request: HttpRequest):
+    def handle_hello_update(self, request: custom_types.HttpRequest) -> None:
         if request.method != "post":
-            raise MethodNotAllowed
+            raise errors.MethodNotAllowed
 
         form_data = self.get_form_data()
-        new_user = User.build(form_data)
+        new_user = custom_types.User.build(form_data)
 
-        if not new_user.errors:
-            self.save_user_data(form_data)
-            self.redirect("/hello")
-            return
+        response_kwargs = {}
+        session = request.session
+        if not session:
+            session = utils.generate_new_session()
+            response_kwargs["session"] = session
 
-        saved_data = self.load_user_data()
-        saved_user = User.build(saved_data)
+        if new_user.errors:
+            saved_data = utils.load_user_data(session)
+            saved_user = custom_types.User.build(saved_data)
+            html = self.render_hello_page(new_user, saved_user)
+            self.respond(html, **response_kwargs)
+        else:
+            utils.store_user_data(session, form_data)
+            self.redirect("/hello", **response_kwargs)
 
-        hello_page = self.render_hello_page(new_user, saved_user)
 
-        self.respond(hello_page)
+    def handle_hello_reset(self, request: custom_types.HttpRequest) -> None:
+        if request.method != "post":
+            raise errors.MethodNotAllowed
 
-    def redirect(self, to):
+        utils.drop_user_data(request.session)
+        self.redirect("/hello/", session="")
+
+    def redirect(self, to, session: Optional[str] = None) -> None:
         self.send_response(302)
         self.send_header("Location", to)
+        self.send_header_session(session)
         self.end_headers()
 
-    def handle_hello(self, request: HttpRequest):
+    def handle_hello(self, request: custom_types.HttpRequest) -> None:
         if request.method != "get":
-            raise MethodNotAllowed
+            raise errors.MethodNotAllowed
 
-        query = self.load_user_data()
-        user = User.build(query)
+        user_data = utils.load_user_data(request.session)
+        user = custom_types.User.build(user_data)
 
         content = self.render_hello_page(user, user)
 
@@ -81,8 +97,8 @@ class MyHandler(SimpleHTTPRequestHandler):
         x = 1 / 0
         print(x)
 
-    def handle_static(self, file_path, content_type):
-        content = read_static(file_path)
+    def handle_static(self, file_path, content_type) -> None:
+        content = utils.read_static(file_path)
         self.respond(content, content_type=content_type)
 
     def handle_404(self):
@@ -96,34 +112,22 @@ class MyHandler(SimpleHTTPRequestHandler):
         msg = traceback.format_exc()
         self.respond(msg, code=500, content_type="text/plain")
 
-    def respond(self, message, code=200, content_type="text/html"):
-        payload = to_bytes(message)
+    def respond(
+        self, message, code=200, content_type="text/html", session: Optional[str] = None
+    ) -> None:
+        payload = utils.to_bytes(message)
 
         self.send_response(code)
-        self.send_header("Content-type", content_type)
-        self.send_header("Content-length", str(len(payload)))
-        self.send_header("Cache-control", f"max-age={CACHE_AGE}")
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header_session(session)
         self.end_headers()
         self.wfile.write(payload)
 
-    @staticmethod
-    def load_user_data() -> str:
-        if not USERS_DATA.is_file():
-            return ""
 
-        with USERS_DATA.open("r") as src:
-            data = src.read()
-
-        data = to_str(data)
-
-        return data
-
-    @staticmethod
-    def save_user_data(data: str) -> None:
-        with USERS_DATA.open("w") as dst:
-            dst.write(data)
-
-    def render_hello_page(self, new_user: User, saved_user: User) -> str:
+    def render_hello_page(
+        self, new_user: custom_types.User, saved_user: custom_types.User
+    ) -> str:
         css_class_for_name = css_class_for_age = ""
         label_for_name = "Your name: "
         label_for_age = "Your age: "
@@ -137,20 +141,20 @@ class MyHandler(SimpleHTTPRequestHandler):
             if "name" in new_user.errors:
                 error = new_user.errors["name"]
                 label_for_name = f"ERROR: {error}"
-                css_class_for_name = CSS_CLASS_ERROR
+                css_class_for_name = consts.CSS_CLASS_ERROR
 
             if "age" in new_user.errors:
                 error = new_user.errors["age"]
                 label_for_age = f"ERROR: {error}"
-                css_class_for_age = CSS_CLASS_ERROR
+                css_class_for_age = consts.CSS_CLASS_ERROR
 
             name_new = new_user.name
             age_new = new_user.age
 
-        template = read_static("hello.html").decode()
+        html = utils.read_static("hello.html").decode()
+        template = Template(html)
 
         context = {
-            "self": self,
             "user": saved_user,
             "age_new": age_new or "",
             "label_for_age": label_for_age,
@@ -162,18 +166,29 @@ class MyHandler(SimpleHTTPRequestHandler):
             "year": year,
         }
 
-        content = template.format(**context)
+        content = template.render(**context)
 
         return content
 
     def get_form_data(self) -> str:
-        content_length_as_str = self.headers.get("content-length", 0)
+        content_length_as_str = self.headers.get("Content-Length", 0)
         content_length = int(content_length_as_str)
 
         if not content_length:
             return ""
 
         payload_as_bytes = self.rfile.read(content_length)
-        payload = to_str(payload_as_bytes)
+        payload = utils.to_str(payload_as_bytes)
 
         return payload
+
+    def send_header_session(self, session: Optional[str]) -> None:
+        if session is None:
+            return
+
+        if session:
+            header = utils.build_session_header(session)
+        else:
+            header = utils.build_session_header("expires", expires=True)
+
+        self.send_header("Set-Cookie", header)
