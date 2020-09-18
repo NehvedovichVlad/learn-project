@@ -20,4 +20,3 @@ if __name__ == "__main__":
             httpd.serve_forever(poll_interval=0.4)
         finally:
             httpd.shutdown()
-            httpd.shutdown()

@@ -1,6 +1,19 @@
  <html>
- <head><title>My Project :: Hello</title></head>
+ <head>
+     <title>My Project :: Hello</title>
+ <style>
+    body {
+      padding-left: var(--padding-left);
+      padding-top: var(--padding-left);
+    }
+  </style>
+ <link href="/style/theme_{{ theme }}.css" rel="stylesheet" type="text/css">
+ </head>
  <body>
+
+ <form method="post" action="/theme">
+  <button type="submit">Switch theme</button>
+</form>
            <h1 style="background-color:powderblue;">>Hello {{user.name}}!</h1>
            <h1 style="background-color:tomato;">>You was born at {{year}}!</h1>
            <p>path: {{self.path}}</p>
