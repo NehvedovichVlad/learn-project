@@ -130,7 +130,7 @@ class MyHttp(SimpleHTTPRequestHandler):
         self.respond(msg, code=500, content_type="text/plain")
 
     def respond(
-        self, message, code=200, content_type="text/html", session: Optional[str] = None
+            self, message, code=200, content_type="text/html", session: Optional[str] = None
     ) -> None:
         payload = utils.to_bytes(message)
 
@@ -141,12 +141,11 @@ class MyHttp(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
-
     def render_hello_page(
-        self,
-        request: custom_types.HttpRequest,
-        new_user: custom_types.User,
-        saved_user: custom_types.User,
+            self,
+            request: custom_types.HttpRequest,
+            new_user: custom_types.User,
+            saved_user: custom_types.User,
     ) -> str:
         css_class_for_name = css_class_for_age = ""
         label_for_name = "Your name: "
@@ -177,7 +176,7 @@ class MyHttp(SimpleHTTPRequestHandler):
         template = Template(html)
 
         context = {
-            "user": saved_user, ####
+            "user": saved_user,
             "age_new": age_new or "",
             "label_for_age": label_for_age,
             "label_for_name": label_for_name,
