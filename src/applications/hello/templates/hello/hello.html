@@ -14,12 +14,14 @@
  <form method="post" action="/theme">
   <button type="submit">Switch theme</button>
 </form>
-           <h1 style="background-color:powderblue;">>Hello {{user.name}}!</h1>
+           <h1 style="background-color:powderblue;">>Hello {{ name_saved|default:"anonymous" }}!</h1>
+            {% if year %}
            <h1 style="background-color:tomato;">>You was born at {{year}}!</h1>
+            {% endif %}
            <p>path: {{self.path}}</p>
            <hr color="red" width="30000">
 
-           <form action="/hello-update" method="post">
+           <form action="/hello/update/" method="post">
     <div>
       <label class="{{class_for_name}}" for="name-id" style="grid-area: gi-name-label">{{label_for_name}}</label>
       <input id="name-id" name="name" style="grid-area: gi-name-input" type="text" value="{{name_new}}">
@@ -29,15 +31,21 @@
 
       <button id="greet-button-id" style="grid-area: gi-submit" type="submit">Greet</button>
     </div>
+               {% csrf_token %}
   </form>
-           <button onclick="document.location='default.asp'">Home Page</button>
+  <form action="/" method="post">
+    <div>
+           <button type="submit">Home Page</button>
            <a class="btn  btn--red" href="/">Home page</a>
+    </div>
+      {% csrf_token %}
+  </form>
 
-  <form action="/reset" method="post">
+  <form action="/hello/reset/" method="post">
     <div>
       <button  type="submit">Reset</button>
-
     </div>
+      {% csrf_token %}
   </form>
 
  </body>
