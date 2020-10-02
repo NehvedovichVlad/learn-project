@@ -17,6 +17,7 @@ pytest-selenium = "*"
 [packages]
 django = "*"
 jinja2 = "*"
+whitenoise = "*"
 
 [requires]
 python_version = "3.8"

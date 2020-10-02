@@ -7,8 +7,8 @@ from urllib.parse import parse_qs
 from urllib.parse import urlsplit
 
 from utils import get_session_from_headers
-from validators import validate_age
-from validators import validate_name
+from applications.hello.validators import validate_age
+from applications.hello.validators import validate_name
 
 
 class HttpRequest(NamedTuple):
