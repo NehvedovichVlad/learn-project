@@ -1,8 +1,12 @@
 from pathlib import Path
 
 from django.contrib import admin
-from django.http import HttpRequest, HttpResponse
-from django.urls import path, include
+from django.http import HttpRequest
+from django.http import HttpResponse
+from django.urls import include
+from django.urls import path
+
+from applications.hello.views import view_index
 
 
 def view_index(request: HttpRequest):
@@ -17,23 +21,23 @@ def view_index(request: HttpRequest):
 
 
 def view_logo(request: HttpRequest):
-    logo = Path(__file__).parent.parent.parent / "static" / "img" / "logo.png"
-    with logo.open("rb") as fl:
-        content = fl.read()
-    return HttpResponse(content, content_type="image/png")
+    logo = Path(__file__).parent.parent.parent / "static" / "images" / "logo.svg"
+    with logo.open("rb") as fp:
+        content = fp.read()
+    return HttpResponse(content, content_type="image/svg+xml")
 
 
 def view_css(request: HttpRequest):
-    css_file = Path(__file__).parent.parent.parent / "static" / "styles" / "style.css"
+    css_file = Path(__file__).parent.parent.parent / "static" / "styles" / "main.css"
     with css_file.open("r") as fp:
         content = fp.read()
     return HttpResponse(content, content_type="text/css")
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path("", view_index),
-    path("image/logo.png", view_logo),
-    path("style/style.css", view_css),
+    path("admin/", admin.site.urls),
+    path("i/logo.svg", view_logo),
+    path("s/main.css", view_css),
     path("hello/", include("applications.hello.urls")),
 ]
