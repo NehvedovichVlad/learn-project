@@ -4,7 +4,7 @@ REPO_DIR = Path(__file__).resolve().parent.parent.parent
 BASE_DIR = REPO_DIR / "src"
 PROJECT_DIR = BASE_DIR / "project"
 
-SECRET_KEY = "47^z241-=2*_qo6z@7=1x6kq%t)5@s)#7ov_sa!7*za&i#22-!"
+SECRET_KEY = "47^z241-=2*_qo6z@7=**x6kq%t)5@s)7ov_sa!s7*za&i#22-!"
 
 DEBUG = True
 
