@@ -18,6 +18,7 @@ pytest-selenium = "*"
 django = "*"
 jinja2 = "*"
 whitenoise = "*"
+dynaconf = {extras = ["yaml"], version = "*"}
 
 [requires]
 python_version = "3.8"

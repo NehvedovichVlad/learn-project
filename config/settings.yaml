@@ -24,6 +24,7 @@ development:
   DEBUG: true
   PORT: 8000
   SECRET_KEY: "1"
+  DATABASE_URL: "sqlite:///xxx.sqlite3"
 
 
 heroku:

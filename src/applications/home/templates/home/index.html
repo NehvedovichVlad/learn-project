@@ -1,9 +1,10 @@
+{% load static %}
 <!doctype html>
 <html>
 <head>
     <meta charset="utf-8">
     <link href="https://fonts.googleapis.com/css?family=Cardo:400i|Open+Sans:700|Raleway:400,600,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="style/style.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/style.css' %}">
     <title>ActiveBox</title>
 
 </head>
@@ -15,7 +16,7 @@
     <div class="container">
         <div class="header__inner">
             <div class="header__logo">
-                <img src="/image/logo.png" alt="xx">
+                <img src="{% static 'img/logo.png' %}" alt="xx">
             </div>
 
             <nav class="nav">
@@ -36,7 +37,7 @@
         <div class="intro__inner">
             <h1 class="intro__title">Your Home page</h1>
             <h2 class="intro__subtitle">Look down</h2>
-            <a class="btn  btn--red" href="/hello">Hello</a>
+            <a class="btn  btn--red" href="{% url "hello:index" %}">Hello</a>
         </div>
     </div>
 </div>
