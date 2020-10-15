@@ -81,11 +81,13 @@
 {% endblock %}
 
 {% block intro %}
-
-<form action="/theme" method="post">
-   <div class="">
-      <button type="submit" class="btn btn--red">Switch theme</button>
+<div class="form-grid">
+   <div action="/theme" method="post">
+      <div class="">
+         <button type="submit" class="btn btn-dark">Switch theme</button>
+      </div>
    </div>
+</div>
 </form>
 <hr>
 <h1>Hello {{ name_saved }}!</h1>
@@ -106,7 +108,7 @@
          {{ form.age.errors }}
       </div>
       <div class="form-field">
-         <button id="greet-button-id" type="submit">Greet</button>
+         <button id="greet-button-id" class="btn btn-success" type="submit">Greet</button>
       </div>
    </div>
    {% csrf_token %}
@@ -114,7 +116,7 @@
    <form action="{% url "hello:reset" %}" method="post">
    <div class="form-grid">
       <div class="form-field">
-         <button id="reset-button-id" type="submit">Reset</button>
+         <button id="reset-button-id" class="btn btn-warning" type="submit">Reset</button>
       </div>
    </div>
    {% csrf_token %}
