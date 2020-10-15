@@ -19,6 +19,7 @@ django = "*"
 jinja2 = "*"
 whitenoise = "*"
 dynaconf = {extras = ["yaml"], version = "*"}
+psycopg2-binary = "*"
 
 [requires]
 python_version = "3.8"

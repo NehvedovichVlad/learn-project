@@ -8,11 +8,11 @@ REPO_DIR = Path(__file__).resolve().parent.parent.parent
 BASE_DIR = REPO_DIR / "src"
 PROJECT_DIR = BASE_DIR / "project"
 
-SECRET_KEY = "53^z241-=2*_ds6z@7=1x6kq1t)5@s)#7ov_sa!s*za&i#22-!"
+SECRET_KEY = _ds.SECRET_KEY
 
-DEBUG = True
+DEBUG = _ds.DEBUG
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = _ds.ALLOWED_HOSTS
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -42,7 +42,9 @@ ROOT_URLCONF = "project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            PROJECT_DIR / "templates"
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
