@@ -16,6 +16,7 @@ default:
     - src/applications/home/templates
     - src/project/templates
   PROJECT_NAME: ""
+  SENTRY_DSN: ""
   SECRET_KEY: ""
   TEMPLATE_ENGINE: "Django"
   VENV_SYNTHETIC: false

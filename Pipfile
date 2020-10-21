@@ -21,6 +21,8 @@ whitenoise = "*"
 dynaconf = {extras = ["yaml"], version = "*"}
 psycopg2-binary = "*"
 dj-database-url = "*"
+sentry-sdk = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.8"
