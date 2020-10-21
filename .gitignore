@@ -2,10 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.sqlite3
 # C extensions
 *.so
-
+*.secrets.yaml
 # Distribution / packaging
 .Python
 build/
@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 .idea
+
+.static
