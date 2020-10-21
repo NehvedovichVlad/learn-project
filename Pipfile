@@ -20,6 +20,7 @@ jinja2 = "*"
 whitenoise = "*"
 dynaconf = {extras = ["yaml"], version = "*"}
 psycopg2-binary = "*"
+dj-database-url = "*"
 
 [requires]
 python_version = "3.8"
